@@ -1,0 +1,53 @@
+specVersion: 1.0.0
+indexerHints:
+  prune: auto
+schema:
+  file: ./schema.graphql
+dataSources:
+  - kind: ethereum
+    name: VideoPost
+    network: mainnet
+    source:
+      address: "0x06D46d664130A2A210a056204d93B41549081776"
+      abi: VideoPost
+      startBlock: 22270000
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - Video
+        - Creator
+      abis:
+        - name: VideoPost
+          file: ./abis/VideoPost.json
+      eventHandlers:
+        - event: VideoPosted(indexed uint256,indexed address,string,string,uint256)
+          handler: handleVideoPosted
+        - event: VideoRemoved(indexed uint256,indexed address)
+          handler: handleVideoRemoved
+      file: ./src/mappings.ts
+
+  - kind: ethereum
+    name: Reactions
+    network: mainnet
+    source:
+      address: "0xae3FF6C0FD07005a0ef16E83572bC68098be4fd3"
+      abi: Reactions
+      startBlock: 22270000
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - Like
+        - Video
+      abis:
+        - name: Reactions
+          file: ./abis/Reactions.json
+      eventHandlers:
+        - event: Liked(indexed address,indexed string)
+          handler: handleLiked
+        - event: Unliked(indexed address,indexed string)
+          handler: handleUnliked
+      file: ./src/mappings.ts

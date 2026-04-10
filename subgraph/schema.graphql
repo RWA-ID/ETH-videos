@@ -1,0 +1,31 @@
+type Video @entity {
+  id: ID! # ipfsCid
+  tokenId: BigInt!
+  poster: Bytes!
+  ipfsCid: String!
+  playbackId: String!
+  caption: String!
+  timestamp: BigInt!
+  blockNumber: BigInt!
+  txHash: Bytes!
+  likes: BigInt!
+  removed: Boolean!
+}
+
+# NOTE: videoCidHash is keccak256(videoCid) because the Reactions contract
+# indexes the videoCid string, making only its hash available to the subgraph.
+type Like @entity {
+  id: ID! # user + "-" + videoCidHash
+  user: Bytes!
+  videoCidHash: String!
+  timestamp: BigInt!
+}
+
+type Creator @entity {
+  id: ID! # address lowercase hex
+  address: Bytes!
+  videoCount: BigInt!
+  totalLikesReceived: BigInt!
+  firstPostAt: BigInt!
+  lastPostAt: BigInt!
+}

@@ -1,0 +1,228 @@
+@import url("https://api.fontshare.com/v2/css?f[]=satoshi@700,500,400&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 240 10% 4%;
+    --foreground: 0 0% 98%;
+    --card: 240 10% 7%;
+    --card-foreground: 0 0% 98%;
+    --popover: 240 10% 7%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 186 100% 50%;
+    --primary-foreground: 240 10% 4%;
+    --secondary: 240 5% 15%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 240 5% 15%;
+    --muted-foreground: 240 5% 60%;
+    --accent: 280 100% 70%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 350 89% 60%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 5% 18%;
+    --input: 240 5% 18%;
+    --ring: 186 100% 50%;
+    --radius: 0.75rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    @apply bg-eth-dark text-foreground;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply bg-eth-dark text-foreground min-h-screen overflow-x-hidden;
+  }
+
+  /* Remove scrollbar but keep scroll functionality */
+  ::-webkit-scrollbar {
+    width: 0px;
+    background: transparent;
+  }
+
+  /* Feed scroll container */
+  .feed-container {
+    scroll-snap-type: y mandatory;
+    overflow-y: scroll;
+    height: 100dvh;
+    -webkit-overflow-scrolling: touch;
+    padding: 8px 14px 84px;
+    background: transparent;
+  }
+
+  .feed-item {
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+    height: 84dvh;
+    border-radius: 24px;
+    overflow: hidden;
+    margin-bottom: 10px;
+    flex-shrink: 0;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+  }
+
+  /* Video fill */
+  video {
+    object-fit: cover;
+  }
+}
+
+@layer utilities {
+  .text-gradient {
+    @apply bg-neon-gradient bg-clip-text text-transparent;
+  }
+
+  .text-gradient-cyan-purple {
+    background: linear-gradient(135deg, #00f5ff, #bf5af2);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .bg-glass {
+    background: rgba(17, 17, 24, 0.7);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  .bg-glass-light {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .neon-border-cyan {
+    box-shadow: 0 0 0 1px rgba(0, 245, 255, 0.3),
+      inset 0 0 0 1px rgba(0, 245, 255, 0.1);
+  }
+
+  .neon-text-cyan {
+    text-shadow: 0 0 10px rgba(0, 245, 255, 0.8),
+      0 0 20px rgba(0, 245, 255, 0.4);
+  }
+
+  .shimmer-bg {
+    background: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 255, 255, 0.05) 50%,
+      rgba(255, 255, 255, 0) 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite;
+  }
+
+  .safe-top {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .tap-highlight-none {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* 3D perspective for flip effects */
+  .perspective-1000 {
+    perspective: 1000px;
+  }
+
+  .preserve-3d {
+    transform-style: preserve-3d;
+  }
+
+  /* Gradient overlay on videos — bottom heavy for caption legibility */
+  .video-gradient-overlay {
+    background: linear-gradient(
+      to top,
+      rgba(0, 0, 0, 0.95) 0%,
+      rgba(0, 0, 0, 0.6) 22%,
+      rgba(0, 0, 0, 0.1) 42%,
+      transparent 55%,
+      rgba(0, 0, 0, 0.1) 70%,
+      rgba(0, 0, 0, 0.55) 100%
+    );
+  }
+
+  /* Pulse ring animation */
+  .pulse-ring::before {
+    content: "";
+    position: absolute;
+    inset: -4px;
+    border-radius: inherit;
+    border: 2px solid currentColor;
+    opacity: 0;
+    animation: pulseRing 1.5s ease-out infinite;
+  }
+
+  @keyframes pulseRing {
+    0% {
+      opacity: 0.8;
+      transform: scale(1);
+    }
+    100% {
+      opacity: 0;
+      transform: scale(1.4);
+    }
+  }
+
+  /* Tip confetti animation */
+  @keyframes confettiFall {
+    0% {
+      transform: translateY(-100%) rotate(0deg);
+      opacity: 1;
+    }
+    100% {
+      transform: translateY(100vh) rotate(720deg);
+      opacity: 0;
+    }
+  }
+}
+
+/* RainbowKit / Modal overrides */
+[data-rk] {
+  --rk-colors-accentColor: #00f5ff !important;
+  --rk-colors-accentColorForeground: #0a0a0f !important;
+  --rk-colors-actionButtonBorder: rgba(0, 245, 255, 0.2) !important;
+  --rk-colors-connectButtonBackground: rgba(0, 245, 255, 0.1) !important;
+  --rk-colors-connectButtonBackgroundError: rgba(255, 55, 95, 0.1) !important;
+  --rk-colors-connectButtonInnerBackground: rgba(17, 17, 24, 0.8) !important;
+  --rk-colors-connectButtonText: #00f5ff !important;
+  --rk-colors-connectButtonTextError: #ff375f !important;
+  --rk-colors-modalBackground: #111118 !important;
+  --rk-colors-modalBorder: rgba(255, 255, 255, 0.08) !important;
+  --rk-colors-modalText: #f8f8f8 !important;
+  --rk-colors-modalTextDim: rgba(248, 248, 248, 0.5) !important;
+  --rk-colors-modalTextSecondary: rgba(248, 248, 248, 0.7) !important;
+}
+
+/* Livepeer player overrides */
+[data-livepeer-player] {
+  border-radius: 0 !important;
+}
+
+/* Loading skeleton */
+.skeleton {
+  @apply bg-eth-surface rounded-lg overflow-hidden relative;
+}
+
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  @apply shimmer-bg;
+}
