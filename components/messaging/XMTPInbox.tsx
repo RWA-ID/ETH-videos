@@ -14,6 +14,7 @@ import {
 import { useAccount } from "wagmi";
 import { ENSAvatar } from "@/components/ui/ENSAvatar";
 import { useXMTP, type XMTPConversation, type XMTPMessage } from "@/hooks/useXMTP";
+// XMTPMessage.senderInboxId replaces senderAddress in v3
 import { useENSName } from "@/hooks/useENS";
 import {
   formatRelativeTime,
@@ -276,7 +277,7 @@ export function XMTPInbox({ defaultPeerAddress }: XMTPInboxProps) {
                         <MessageBubble
                           key={msg.id}
                           message={msg}
-                          isOwn={msg.senderAddress === address}
+                          isOwn={msg.senderInboxId === address}
                         />
                       ))
                     )}
@@ -468,7 +469,7 @@ function ConversationRow({
         </div>
         {lastMsg && (
           <p className="text-muted-foreground text-xs truncate">
-            {lastMsg.senderAddress === currentAddress ? "You: " : ""}
+            {lastMsg.senderInboxId === currentAddress ? "You: " : ""}
             {lastMsg.content}
           </p>
         )}

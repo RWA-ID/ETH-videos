@@ -64,7 +64,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-eth-dark overflow-hidden`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-eth-dark overflow-hidden font-sans`}
       >
         <Providers>{children}</Providers>
       </body>

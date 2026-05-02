@@ -1,4 +1,4 @@
-@import url("https://api.fontshare.com/v2/css?f[]=satoshi@700,500,400&display=swap");
+@import url("https://api.fontshare.com/v2/css?f[]=satoshi@900,800,700,600,500,400&display=swap");
 
 @tailwind base;
 @tailwind components;
@@ -41,7 +41,8 @@
   }
 
   body {
-    @apply bg-eth-dark text-foreground min-h-screen overflow-x-hidden;
+    @apply bg-eth-dark text-foreground min-h-screen overflow-x-hidden font-sans;
+    font-family: 'Satoshi', system-ui, -apple-system, sans-serif;
   }
 
   /* Remove scrollbar but keep scroll functionality */
@@ -112,10 +113,10 @@
   }
 
   .bg-glass {
-    background: rgba(17, 17, 24, 0.7);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    background: linear-gradient(180deg, rgba(22, 22, 38, 0.65), rgba(10, 10, 18, 0.75));
+    backdrop-filter: blur(28px) saturate(170%);
+    -webkit-backdrop-filter: blur(28px) saturate(170%);
+    border: 1px solid rgba(255, 255, 255, 0.08);
   }
 
   .bg-glass-light {
@@ -201,6 +202,103 @@
       transform: scale(1.4);
     }
   }
+
+  /* ── EV Design System utilities ── */
+
+  .ev-mesh-bg {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+    background:
+      radial-gradient(60% 50% at 18% 12%, rgba(0, 245, 255, 0.14) 0%, transparent 60%),
+      radial-gradient(50% 50% at 82% 28%, rgba(191, 90, 242, 0.18) 0%, transparent 60%),
+      radial-gradient(70% 60% at 50% 110%, rgba(255, 55, 95, 0.12) 0%, transparent 60%);
+  }
+
+  .ev-grid-bg {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+    background-size: 40px 40px;
+    mask-image: radial-gradient(ellipse 80% 70% at 50% 30%, #000, transparent 75%);
+    -webkit-mask-image: radial-gradient(ellipse 80% 70% at 50% 30%, #000, transparent 75%);
+  }
+
+  .ev-glass-soft {
+    background: rgba(255, 255, 255, 0.04);
+    backdrop-filter: blur(20px) saturate(160%);
+    -webkit-backdrop-filter: blur(20px) saturate(160%);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  .ev-grad-border {
+    position: relative;
+  }
+  .ev-grad-border::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    padding: 1px;
+    border-radius: inherit;
+    background: linear-gradient(135deg, #00f5ff 0%, #bf5af2 50%, #ff375f 100%);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+
+  .ev-pill-grad {
+    background: linear-gradient(135deg, #00f5ff 0%, #bf5af2 50%, #ff375f 100%);
+    color: #06070d;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    border: none;
+    box-shadow: 0 6px 20px rgba(0, 245, 255, 0.25), 0 4px 16px rgba(191, 90, 242, 0.20);
+    position: relative;
+  }
+  .ev-pill-grad::after {
+    content: "";
+    position: absolute;
+    inset: 1px;
+    border-radius: inherit;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.18), transparent 60%);
+    pointer-events: none;
+  }
+
+  .ev-text-grad {
+    background: linear-gradient(135deg, #00f5ff 0%, #bf5af2 50%, #ff375f 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
+
+  @keyframes ev-glow-pulse {
+    0%, 100% { opacity: 0.55; transform: scale(1); }
+    50% { opacity: 0.95; transform: scale(1.06); }
+  }
+
+  @keyframes ev-shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
+
+  @keyframes ev-spin {
+    to { transform: rotate(360deg); }
+  }
+
+  @keyframes ev-fade-up {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .ev-glow-pulse { animation: ev-glow-pulse 4s ease-in-out infinite; }
+  .ev-fade-up { animation: ev-fade-up 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+  .ev-spin-slow { animation: ev-spin 8s linear infinite; }
 
   /* Tip confetti animation */
   @keyframes confettiFall {

@@ -2,19 +2,13 @@
 
 import { useCallback, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import {
-  Heart,
-  MessageCircle,
-  Share2,
-  MoreHorizontal,
-} from "lucide-react";
+import { Heart, MessageCircle, Share2, Zap, Eye, Send } from "lucide-react";
 import { useAccount, useWriteContract } from "wagmi";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
 import { VideoPlayer } from "@/components/video/VideoPlayer";
 import { ENSAvatar } from "@/components/ui/ENSAvatar";
 import { TipModal } from "@/components/tips/TipModal";
 import { CommentsSheet } from "@/components/video/CommentsSheet";
-import { DMButton } from "@/components/messaging/DMButton";
 import {
   formatCount,
   formatRelativeTime,
@@ -23,6 +17,17 @@ import {
 } from "@/lib/utils";
 import { CONTRACTS, REACTIONS_ABI } from "@/lib/contracts";
 import type { VideoMetadata } from "@/types";
+
+const GRAD = "linear-gradient(135deg, #00f5ff 0%, #bf5af2 50%, #ff375f 100%)";
+
+const railBtnStyle: React.CSSProperties = {
+  width: 44, height: 44, borderRadius: 14, display: "grid", placeItems: "center",
+  background: "rgba(6,7,13,0.4)", border: "1px solid rgba(255,255,255,0.1)",
+  backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)",
+};
+const railLabelStyle: React.CSSProperties = {
+  fontSize: 10, fontWeight: 700, color: "#fff", textShadow: "0 1px 3px rgba(0,0,0,0.6)",
+};
 
 interface VideoCardProps {
   video: VideoMetadata;
@@ -70,73 +75,122 @@ export function VideoCard({ video, isActive, onProfileClick }: VideoCardProps) {
   const displayName = formatDisplayName(video.poster, video.posterEns);
 
   return (
-    <div className="bg-eth-card border-b border-eth-border/40 md:rounded-2xl md:border md:shadow-[0_4px_24px_rgba(0,0,0,0.5)] overflow-hidden">
-      {/* ── Top bar: avatar + name + timestamp ── */}
-      <div className="flex items-center gap-3 px-4 py-3">
-        <button
-          onClick={() => onProfileClick?.(video.poster)}
-          className="tap-highlight-none flex-shrink-0"
+    <div
+      className="ev-fade-up"
+      style={{
+        position: "relative",
+        width: "100%",
+        aspectRatio: "9 / 16",
+        borderRadius: 22,
+        overflow: "hidden",
+        background: "#06070d",
+        boxShadow: isActive
+          ? "0 24px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.1), 0 12px 40px rgba(0,245,255,0.14), 0 12px 40px rgba(191,90,242,0.12)"
+          : "0 16px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.07)",
+        transform: isActive ? "translateY(-2px)" : "none",
+        transition: "transform 0.3s, box-shadow 0.3s",
+      }}
+    >
+      {/* Video */}
+      <VideoPlayer
+        playbackId={video.playbackId}
+        thumbnailUrl={video.thumbnailUrl}
+        isActive={isActive}
+        className="absolute inset-0 w-full h-full"
+      />
+
+      {/* Gradient legibility overlay */}
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          background:
+            "linear-gradient(to top, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.4) 25%, transparent 45%, transparent 60%, rgba(0,0,0,0.5) 100%)",
+          pointerEvents: "none",
+        }}
+      />
+
+      {/* Top-right floating badges */}
+      <div
+        style={{
+          position: "absolute",
+          top: 12,
+          right: 12,
+          display: "flex",
+          flexDirection: "column",
+          gap: 8,
+          alignItems: "flex-end",
+        }}
+      >
+        <div
+          className="ev-glass-soft"
+          style={{
+            padding: "5px 10px",
+            borderRadius: 999,
+            fontSize: 11,
+            fontWeight: 700,
+            display: "flex",
+            alignItems: "center",
+            gap: 5,
+            color: "rgba(244,245,250,0.9)",
+          }}
         >
-          <ENSAvatar
-            address={video.poster}
-            ensName={video.posterEns}
-            avatarUrl={video.posterAvatar}
-            size="md"
-            showRing
-          />
-        </button>
-        <button
-          onClick={() => onProfileClick?.(video.poster)}
-          className="flex-1 text-left tap-highlight-none min-w-0"
-        >
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="text-white font-bold text-sm leading-none">
-              @{displayName}
-            </span>
-          </div>
-          <span className="text-muted-foreground text-xs">
-            {formatRelativeTime(video.timestamp)}
+          <Eye size={12} />
+          <span style={{ fontVariantNumeric: "tabular-nums" }}>
+            {formatCount(video.views || 0)}
           </span>
-        </button>
-        <button className="text-muted-foreground/50 hover:text-white/70 transition-colors tap-highlight-none">
-          <MoreHorizontal size={18} />
-        </button>
+        </div>
+        <div
+          style={{
+            padding: "5px 10px",
+            borderRadius: 999,
+            fontSize: 11,
+            fontWeight: 800,
+            display: "flex",
+            alignItems: "center",
+            gap: 5,
+            background: "rgba(6,7,13,0.6)",
+            border: "1px solid rgba(0,245,255,0.35)",
+            backdropFilter: "blur(20px)",
+            WebkitBackdropFilter: "blur(20px)",
+            color: "#fff",
+            boxShadow: "0 0 20px rgba(0,245,255,0.2)",
+          }}
+        >
+          <Zap size={11} fill="#00f5ff" color="#00f5ff" />
+          <span style={{ fontVariantNumeric: "tabular-nums" }}>
+            {video.tips !== "0" ? `${video.tips}Ξ` : "Tip"}
+          </span>
+        </div>
       </div>
 
-      {/* ── 16:9 video container ── */}
-      <div className="relative w-full" style={{ aspectRatio: "16/9", background: "#000" }}>
-        <VideoPlayer
-          playbackId={video.playbackId}
-          thumbnailUrl={video.thumbnailUrl}
-          isActive={isActive}
-          className="absolute inset-0"
-        />
-      </div>
-
-      {/* ── Action row ── */}
-      <div className="flex items-center px-3 py-2 gap-1">
+      {/* Right action rail */}
+      <div
+        style={{
+          position: "absolute",
+          right: 10,
+          bottom: 100,
+          display: "flex",
+          flexDirection: "column",
+          gap: 18,
+          alignItems: "center",
+        }}
+      >
         {/* Like */}
         <motion.button
           whileTap={{ scale: 0.85 }}
           onClick={handleLike}
-          className="flex items-center gap-1.5 px-3 py-2 rounded-xl tap-highlight-none"
-          style={{ minWidth: 56 }}
+          style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, background: "transparent", border: "none" }}
         >
-          <motion.div
-            animate={likeAnimation ? { scale: [1, 1.5, 1] } : {}}
-            transition={{ duration: 0.4 }}
-          >
-            <Heart
-              size={22}
-              className={cn(
-                "transition-all duration-200",
-                liked
-                  ? "fill-neon-pink text-neon-pink drop-shadow-[0_0_8px_rgba(255,55,95,0.9)]"
-                  : "text-white/70"
-              )}
-            />
-          </motion.div>
-          <span className={cn("text-xs font-semibold", liked ? "text-neon-pink" : "text-white/70")}>
+          <span style={{ ...railBtnStyle, filter: liked ? "drop-shadow(0 0 8px rgba(255,55,95,0.8))" : undefined }}>
+            <motion.div animate={likeAnimation ? { scale: [1, 1.5, 1] } : {}} transition={{ duration: 0.4 }}>
+              <Heart
+                size={22}
+                className={cn(liked ? "fill-neon-pink text-neon-pink" : "text-white")}
+              />
+            </motion.div>
+          </span>
+          <span style={{ fontSize: 10, fontWeight: 700, color: "#fff", textShadow: "0 1px 3px rgba(0,0,0,0.6)" }}>
             {formatCount(likeCount)}
           </span>
         </motion.button>
@@ -145,10 +199,12 @@ export function VideoCard({ video, isActive, onProfileClick }: VideoCardProps) {
         <motion.button
           whileTap={{ scale: 0.85 }}
           onClick={() => setShowComments(true)}
-          className="flex items-center gap-1.5 px-3 py-2 rounded-xl tap-highlight-none"
+          style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, background: "transparent", border: "none" }}
         >
-          <MessageCircle size={22} className="text-white/70" />
-          <span className="text-xs font-semibold text-white/70">
+          <span style={railBtnStyle}>
+            <MessageCircle size={22} color="#fff" />
+          </span>
+          <span style={{ fontSize: 10, fontWeight: 700, color: "#fff", textShadow: "0 1px 3px rgba(0,0,0,0.6)" }}>
             {formatCount(video.comments)}
           </span>
         </motion.button>
@@ -157,79 +213,141 @@ export function VideoCard({ video, isActive, onProfileClick }: VideoCardProps) {
         <motion.button
           whileTap={{ scale: 0.85 }}
           onClick={handleShare}
-          className="flex items-center gap-1.5 px-3 py-2 rounded-xl tap-highlight-none"
+          style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, background: "transparent", border: "none" }}
         >
-          <Share2 size={22} className="text-white/70" />
+          <span style={railBtnStyle}>
+            <Share2 size={22} color="#fff" />
+          </span>
+          <span style={railLabelStyle}>Share</span>
         </motion.button>
 
-        {/* DM */}
-        <div className="flex items-center">
-          <DMButton
-            peerAddress={video.poster}
-            variant="icon"
-            className="w-10 h-10 bg-transparent border-none text-white/70 hover:text-white"
-          />
-        </div>
-
-        {/* Spacer */}
-        <div className="flex-1" />
-
-        {/* Tip ETH */}
+        {/* Tip */}
         <motion.button
-          whileTap={{ scale: 0.92 }}
-          onClick={() => {
-            if (!address) { openConnectModal?.(); return; }
-            setTipToken("ETH");
-            setShowTip(true);
-          }}
-          className="flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-bold"
-          style={{
-            background: "rgba(98,126,234,0.15)",
-            border: "1px solid rgba(98,126,234,0.35)",
-            color: "rgba(255,255,255,0.85)",
-          }}
+          whileTap={{ scale: 0.85 }}
+          onClick={() => { if (!address) { openConnectModal?.(); return; } setTipToken("ETH"); setShowTip(true); }}
+          style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, background: "transparent", border: "none",
+            filter: "drop-shadow(0 0 6px rgba(0,245,255,0.4))" }}
         >
-          <ETHIcon size={14} />
-          Tip
+          <span style={{ ...railBtnStyle, border: "1px solid rgba(0,245,255,0.35)", boxShadow: "0 0 20px rgba(0,245,255,0.2)" }}>
+            <Zap size={22} color="#00f5ff" fill="#00f5ff" />
+          </span>
+          <span style={{ ...railLabelStyle, color: "#00f5ff" }}>Tip</span>
         </motion.button>
 
-        {/* Tip USDC */}
-        <motion.button
-          whileTap={{ scale: 0.92 }}
-          onClick={() => {
-            if (!address) { openConnectModal?.(); return; }
-            setTipToken("USDC");
-            setShowTip(true);
-          }}
-          className="flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-bold"
-          style={{
-            background: "rgba(39,117,202,0.15)",
-            border: "1px solid rgba(39,117,202,0.35)",
-            color: "rgba(255,255,255,0.85)",
-          }}
+        {/* Spinning ENS avatar disc */}
+        <button
+          onClick={() => onProfileClick?.(video.poster)}
+          style={{ position: "relative", marginTop: 4 }}
         >
-          <USDCIcon size={14} />
-          USDC
-        </motion.button>
+          <div
+            className="ev-spin-slow"
+            style={{
+              width: 44,
+              height: 44,
+              borderRadius: "50%",
+              background: GRAD,
+              padding: 2,
+            }}
+          >
+            <div style={{ width: "100%", height: "100%", borderRadius: "50%", background: "#06070d", padding: 2 }}>
+              <ENSAvatar
+                address={video.poster}
+                ensName={video.posterEns}
+                avatarUrl={video.posterAvatar}
+                size="sm"
+              />
+            </div>
+          </div>
+        </button>
       </div>
 
-      {/* ── Caption ── */}
-      {video.caption && (
-        <div className="px-4 pb-3">
-          <p className="text-white/90 text-sm leading-relaxed">
+      {/* Bottom overlay: name + caption + hashtags + progress */}
+      <div
+        style={{
+          position: "absolute",
+          bottom: 0,
+          left: 0,
+          right: 70,
+          padding: "0 16px 20px",
+        }}
+      >
+        {/* Creator row */}
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+          <button onClick={() => onProfileClick?.(video.poster)} style={{ flexShrink: 0 }}>
+            <ENSAvatar
+              address={video.poster}
+              ensName={video.posterEns}
+              avatarUrl={video.posterAvatar}
+              size="sm"
+              showRing
+            />
+          </button>
+          <div style={{ minWidth: 0, flex: 1 }}>
+            <button
+              onClick={() => onProfileClick?.(video.poster)}
+              style={{ display: "flex", alignItems: "center", gap: 5 }}
+            >
+              <span style={{ fontSize: 14, fontWeight: 800, color: "#fff", letterSpacing: "-0.01em" }}>
+                @{displayName}
+              </span>
+            </button>
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", marginTop: 1 }}>
+              {formatRelativeTime(video.timestamp)}
+            </div>
+          </div>
+          <button
+            onClick={() => onProfileClick?.(video.poster)}
+            style={{
+              height: 28, padding: "0 14px", borderRadius: 999, fontSize: 11, fontWeight: 800,
+              background: "rgba(255,255,255,0.95)", color: "#06070d", border: "none", flexShrink: 0,
+            }}
+          >
+            Follow
+          </button>
+        </div>
+
+        {/* Caption */}
+        {video.caption && (
+          <p style={{ fontSize: 13, color: "#fff", lineHeight: 1.4, margin: 0, fontWeight: 500, textShadow: "0 1px 4px rgba(0,0,0,0.6)" }}>
             {video.caption}
           </p>
-          {video.hashtags.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 mt-1.5">
-              {video.hashtags.slice(0, 4).map((tag) => (
-                <span key={tag} className="text-neon-cyan text-xs font-medium">
-                  #{tag}
-                </span>
-              ))}
-            </div>
-          )}
+        )}
+
+        {/* Hashtags */}
+        {video.hashtags?.length > 0 && (
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 8 }}>
+            {video.hashtags.slice(0, 4).map((tag) => (
+              <span
+                key={tag}
+                style={{
+                  fontSize: 12,
+                  fontWeight: 700,
+                  background: GRAD,
+                  WebkitBackgroundClip: "text",
+                  backgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                  color: "transparent",
+                }}
+              >
+                #{tag}
+              </span>
+            ))}
+          </div>
+        )}
+
+        {/* Progress bar */}
+        <div style={{ marginTop: 12, height: 3, borderRadius: 999, background: "rgba(255,255,255,0.15)", overflow: "hidden" }}>
+          <div
+            style={{
+              height: "100%",
+              width: "38%",
+              background: GRAD,
+              borderRadius: 999,
+              boxShadow: "0 0 10px rgba(0,245,255,0.6)",
+            }}
+          />
         </div>
-      )}
+      </div>
 
       {/* Modals */}
       <CommentsSheet
@@ -251,14 +369,14 @@ export function VideoCard({ video, isActive, onProfileClick }: VideoCardProps) {
   );
 }
 
-function ETHIcon({ size = 18 }: { size?: number }) {
+function ETHIcon({ size = 14 }: { size?: number }) {
   return (
     <img src="/icons/eth.svg" alt="ETH" width={size} height={size}
       style={{ objectFit: "contain", display: "block", filter: "brightness(0) invert(1)" }} />
   );
 }
 
-function USDCIcon({ size = 18 }: { size?: number }) {
+function USDCIcon({ size = 14 }: { size?: number }) {
   return (
     <img src="/icons/usdc.png" alt="USDC" width={size} height={size}
       style={{ objectFit: "contain", display: "block" }} />

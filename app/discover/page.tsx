@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { motion } from "motion/react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { TrendingUp, Flame, Search } from "lucide-react";
 import { Header } from "@/components/layout/Header";
 import { BottomNav } from "@/components/layout/BottomNav";
@@ -24,6 +25,7 @@ const TRENDING_HASHTAGS = [
 ];
 
 export default function DiscoverPage() {
+  const router = useRouter();
   const [query, setQuery] = useState("");
   const [trendingVideos, setTrendingVideos] = useState<VideoMetadata[]>([]);
   const [loading, setLoading] = useState(true);
@@ -51,7 +53,7 @@ export default function DiscoverPage() {
   return (
     <main className="bg-eth-dark min-h-dvh pb-20">
       <BackgroundLights variant="subtle" />
-      <Header title="Discover" showSearch />
+      <Header title="Discover" showSearch onHome={() => router.push("/")} />
 
       <div className="pt-16 px-4">
         {/* Search bar */}

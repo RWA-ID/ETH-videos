@@ -15,6 +15,8 @@ const NAV_ITEMS = [
   { href: "/profile", icon: User, label: "Profile" },
 ];
 
+const GRAD = "linear-gradient(135deg, #00f5ff 0%, #bf5af2 50%, #ff375f 100%)";
+
 interface BottomNavProps {
   onUploadClick?: () => void;
   onProfileClick?: (address: string) => void;
@@ -26,8 +28,15 @@ export function BottomNav({ onUploadClick, onProfileClick }: BottomNavProps) {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 safe-bottom">
-      <div className="bg-glass border-t border-eth-border">
-        <div className="flex items-center justify-around h-16 px-2 max-w-lg mx-auto">
+      <div
+        style={{
+          background: "linear-gradient(180deg, rgba(22,22,38,0.65), rgba(10,10,18,0.75))",
+          backdropFilter: "blur(28px) saturate(170%)",
+          WebkitBackdropFilter: "blur(28px) saturate(170%)",
+          borderTop: "1px solid rgba(255,255,255,0.06)",
+        }}
+      >
+        <div className="flex items-center justify-around h-20 px-2 max-w-lg mx-auto">
           {NAV_ITEMS.map(({ href, icon: Icon, label, special }) => {
             if (special) {
               return (
@@ -36,36 +45,97 @@ export function BottomNav({ onUploadClick, onProfileClick }: BottomNavProps) {
                   onClick={onUploadClick}
                   className="tap-highlight-none flex-1 flex justify-center"
                 >
-                  <motion.div
-                    whileTap={{ scale: 0.9 }}
-                    className="relative"
-                  >
-                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-neon-cyan via-neon-purple to-neon-pink flex items-center justify-center shadow-neon">
-                      <Plus size={22} className="text-eth-dark font-bold" strokeWidth={3} />
+                  <motion.div whileTap={{ scale: 0.9 }} style={{ position: "relative" }}>
+                    {/* Glow bloom */}
+                    <div
+                      className="ev-glow-pulse"
+                      style={{
+                        position: "absolute",
+                        inset: -8,
+                        borderRadius: 22,
+                        background: GRAD,
+                        filter: "blur(14px)",
+                        opacity: 0.5,
+                        zIndex: -1,
+                      }}
+                    />
+                    <div
+                      style={{
+                        width: 50,
+                        height: 50,
+                        borderRadius: 16,
+                        background: GRAD,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        color: "#06070d",
+                        boxShadow: "0 8px 24px rgba(0,245,255,0.35), 0 8px 24px rgba(191,90,242,0.30)",
+                      }}
+                    >
+                      <Plus size={22} strokeWidth={2.6} />
                     </div>
-                    {/* Glow ring */}
-                    <div className="absolute inset-0 rounded-2xl bg-neon-cyan/20 blur-md -z-10 animate-pulse" />
                   </motion.div>
                 </button>
               );
             }
 
-            const isActive = pathname === href ||
-              (href === "/profile" && (pathname === "/profile" || pathname.startsWith("/profile/")));
+            const isActive =
+              pathname === href ||
+              (href === "/profile" &&
+                (pathname === "/profile" || pathname.startsWith("/profile/")));
 
             if (href === "/profile") {
               return (
                 <button
                   key={href}
                   onClick={() => address && onProfileClick?.(address)}
-                  className="tap-highlight-none flex-1 flex flex-col items-center justify-center gap-0.5 h-full"
+                  className="tap-highlight-none flex-1 flex flex-col items-center justify-center gap-1 h-full relative"
                 >
+                  {isActive && (
+                    <span
+                      style={{
+                        position: "absolute",
+                        top: 0,
+                        left: "50%",
+                        transform: "translateX(-50%)",
+                        width: 32,
+                        height: 4,
+                        borderRadius: 999,
+                        background: GRAD,
+                        boxShadow: "0 0 12px rgba(0,245,255,0.6), 0 0 18px rgba(191,90,242,0.5)",
+                      }}
+                    />
+                  )}
                   <motion.div
                     whileTap={{ scale: 0.85 }}
-                    className="flex flex-col items-center gap-0.5 transition-all duration-200 text-muted-foreground"
+                    className="flex flex-col items-center gap-1"
                   >
-                    <Icon size={22} />
-                    <span className="text-[11px] font-black tracking-tight">{label}</span>
+                    <span
+                      style={
+                        isActive
+                          ? {
+                              background: GRAD,
+                              WebkitBackgroundClip: "text",
+                              backgroundClip: "text",
+                              WebkitTextFillColor: "transparent",
+                              display: "inline-flex",
+                              filter: "drop-shadow(0 0 4px rgba(0,245,255,0.5))",
+                            }
+                          : { color: "rgba(244,245,250,0.38)", display: "inline-flex" }
+                      }
+                    >
+                      <Icon size={22} />
+                    </span>
+                    <span
+                      style={{
+                        fontSize: 10,
+                        fontWeight: 700,
+                        letterSpacing: "-0.01em",
+                        color: isActive ? "rgba(244,245,250,0.9)" : "rgba(244,245,250,0.38)",
+                      }}
+                    >
+                      {label}
+                    </span>
                   </motion.div>
                 </button>
               );
@@ -75,31 +145,53 @@ export function BottomNav({ onUploadClick, onProfileClick }: BottomNavProps) {
               <Link
                 key={href}
                 href={href}
-                className="tap-highlight-none flex-1 flex flex-col items-center justify-center gap-0.5 h-full"
+                className="tap-highlight-none flex-1 flex flex-col items-center justify-center gap-1 h-full relative"
               >
+                {isActive && (
+                  <span
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      left: "50%",
+                      transform: "translateX(-50%)",
+                      width: 32,
+                      height: 4,
+                      borderRadius: 999,
+                      background: GRAD,
+                      boxShadow: "0 0 12px rgba(0,245,255,0.6), 0 0 18px rgba(191,90,242,0.5)",
+                    }}
+                  />
+                )}
                 <motion.div
                   whileTap={{ scale: 0.85 }}
-                  className={cn(
-                    "flex flex-col items-center gap-0.5 transition-all duration-200",
-                    isActive ? "text-neon-cyan" : "text-muted-foreground"
-                  )}
+                  className="flex flex-col items-center gap-1"
                 >
-                  <div className="relative">
-                    <Icon
-                      size={22}
-                      className={cn(
-                        "transition-all duration-200",
-                        isActive && "drop-shadow-[0_0_6px_rgba(0,245,255,0.8)]"
-                      )}
-                    />
-                    {isActive && (
-                      <motion.div
-                        layoutId="nav-indicator"
-                        className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-neon-cyan"
-                      />
-                    )}
-                  </div>
-                  <span className="text-[11px] font-black tracking-tight">{label}</span>
+                  <span
+                    style={
+                      isActive
+                        ? {
+                            background: GRAD,
+                            WebkitBackgroundClip: "text",
+                            backgroundClip: "text",
+                            WebkitTextFillColor: "transparent",
+                            display: "inline-flex",
+                            filter: "drop-shadow(0 0 4px rgba(0,245,255,0.5))",
+                          }
+                        : { color: "rgba(244,245,250,0.38)", display: "inline-flex" }
+                    }
+                  >
+                    <Icon size={22} />
+                  </span>
+                  <span
+                    style={{
+                      fontSize: 10,
+                      fontWeight: 700,
+                      letterSpacing: "-0.01em",
+                      color: isActive ? "rgba(244,245,250,0.9)" : "rgba(244,245,250,0.38)",
+                    }}
+                  >
+                    {label}
+                  </span>
                 </motion.div>
               </Link>
             );

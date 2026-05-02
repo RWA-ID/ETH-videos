@@ -1,31 +1,26 @@
 "use client";
 
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef } from "react";
 import { useWalletClient } from "wagmi";
+import { hexToBytes, keccak256 } from "viem";
 
-// XMTP browser SDK — dynamically imported to avoid SSR issues
 type XMTPClient = import("@xmtp/browser-sdk").Client;
-type Conversation = import("@xmtp/browser-sdk").Conversation;
-type DecodedMessage = import("@xmtp/browser-sdk").DecodedMessage;
 
 export interface XMTPMessage {
   id: string;
-  senderAddress: string;
+  senderInboxId: string;
   content: string;
   sentAt: Date;
 }
 
 export interface XMTPConversation {
   id: string;
-  peerAddress: string;
+  peerAddress: string;   // wallet address of the DM peer
+  peerInboxId: string;
   messages: XMTPMessage[];
 }
 
-type XMTPStatus =
-  | "idle"
-  | "initializing"
-  | "ready"
-  | "error";
+type XMTPStatus = "idle" | "initializing" | "ready" | "error";
 
 export function useXMTP() {
   const { data: walletClient } = useWalletClient();
@@ -42,23 +37,21 @@ export function useXMTP() {
     try {
       const { Client } = await import("@xmtp/browser-sdk");
 
+      // v3 Signer — walletType required, signMessage must return Uint8Array
       const signer = {
+        walletType: "EOA" as const,
         getAddress: async () => walletClient.account.address,
-        signMessage: async (message: string) => {
+        signMessage: async (message: string): Promise<Uint8Array> => {
           const sig = await walletClient.signMessage({ message });
-          return sig;
+          return hexToBytes(sig);
         },
       };
 
-      // Derive a deterministic 32-byte encryption key from the wallet.
-      // This avoids "Malformed 32 byte encryption key" errors caused by
-      // a missing or corrupted key stored in IndexedDB.
-      const keySignature = await walletClient.signMessage({
+      // Deterministic 32-byte encryption key derived from wallet signature
+      const keyHex = await walletClient.signMessage({
         message: "ethvideos.eth XMTP encryption key v1",
       });
-      // keccak256 of the hex signature → 32 bytes
-      const { keccak256, toBytes } = await import("viem");
-      const encryptionKey = toBytes(keccak256(keySignature as `0x${string}`));
+      const encryptionKey = hexToBytes(keccak256(keyHex));
 
       const client = await Client.create(signer, encryptionKey, {
         env: "production",
@@ -80,17 +73,29 @@ export function useXMTP() {
     try {
       await client.conversations.sync();
       const convos = await client.conversations.list();
+
       const enriched = await Promise.all(
         convos.slice(0, 20).map(async (convo) => {
-          const messages = await convo.messages({ limit: 50 });
+          const messages = await convo.messages({ limit: 50 } as Parameters<typeof convo.messages>[0]);
+          const peerInboxId = await convo.dmPeerInboxId();
+
+          // Resolve inbox ID → wallet address
+          let peerAddress = peerInboxId;
+          try {
+            const state = await client.getLatestInboxState(peerInboxId);
+            const addrs = (state as { accountAddresses?: string[] }).accountAddresses;
+            if (addrs && addrs.length > 0) peerAddress = addrs[0];
+          } catch { /* use inboxId as fallback */ }
+
           return {
             id: convo.id,
-            peerAddress: convo.peerAddress,
+            peerAddress,
+            peerInboxId,
             messages: messages.map((m) => ({
               id: m.id,
-              senderAddress: m.senderAddress,
+              senderInboxId: m.senderInboxId,
               content: typeof m.content === "string" ? m.content : "",
-              sentAt: m.sentAt ?? new Date(),
+              sentAt: new Date(Number(m.sentAtNs / 1000000n)),
             })),
           };
         })
@@ -107,52 +112,36 @@ export function useXMTP() {
       if (!client || !content.trim()) return false;
 
       try {
-        const canMessage = await Client.canMessage([peerAddress], {
-          env: "production",
-        });
-
-        if (!canMessage[peerAddress]) {
+        // Check if peer is on XMTP v3
+        const canMsg = await Client.canMessage([peerAddress], { env: "production" } as Parameters<typeof Client.canMessage>[1]);
+        if (!canMsg.get(peerAddress)) {
           setError(`${peerAddress} hasn't enabled XMTP yet`);
           return false;
         }
 
-        const conversation = await client.conversations.newConversation(
-          peerAddress
-        );
+        const conversation = await client.conversations.newDm(peerAddress);
         await conversation.send(content);
 
-        // Update local state optimistically
+        const newMsg: XMTPMessage = {
+          id: Date.now().toString(),
+          senderInboxId: client.inboxId ?? "",
+          content,
+          sentAt: new Date(),
+        };
+
         setConversations((prev) => {
           const existing = prev.find((c) => c.peerAddress === peerAddress);
-          const newMsg: XMTPMessage = {
-            id: Date.now().toString(),
-            senderAddress: client.address,
-            content,
-            sentAt: new Date(),
-          };
-
           if (existing) {
             return prev.map((c) =>
-              c.peerAddress === peerAddress
-                ? { ...c, messages: [...c.messages, newMsg] }
-                : c
+              c.peerAddress === peerAddress ? { ...c, messages: [...c.messages, newMsg] } : c
             );
-          } else {
-            return [
-              ...prev,
-              {
-                id: conversation.id,
-                peerAddress,
-                messages: [newMsg],
-              },
-            ];
           }
+          return [...prev, { id: conversation.id, peerAddress, peerInboxId: "", messages: [newMsg] }];
         });
 
         return true;
       } catch (err) {
-        const msg = err instanceof Error ? err.message : "Send failed";
-        setError(msg);
+        setError(err instanceof Error ? err.message : "Send failed");
         return false;
       }
     },
@@ -162,31 +151,28 @@ export function useXMTP() {
   const checkCanMessage = useCallback(async (address: string): Promise<boolean> => {
     try {
       const { Client } = await import("@xmtp/browser-sdk");
-      const result = await Client.canMessage([address], { env: "production" });
-      return result[address] ?? false;
+      const result = await Client.canMessage([address], { env: "production" } as Parameters<typeof Client.canMessage>[1]);
+      return result.get(address) ?? false;
     } catch {
       return false;
     }
   }, []);
 
   const streamMessages = useCallback(
-    async (
-      peerAddress: string,
-      onMessage: (msg: XMTPMessage) => void
-    ): Promise<() => void> => {
+    async (peerAddress: string, onMessage: (msg: XMTPMessage) => void): Promise<() => void> => {
       const client = clientRef.current;
       if (!client) return () => {};
 
-      const conversation = await client.conversations.newConversation(peerAddress);
+      const conversation = await client.conversations.newDm(peerAddress);
       const stream = await conversation.streamMessages();
 
       (async () => {
         for await (const message of stream) {
           onMessage({
             id: message.id,
-            senderAddress: message.senderAddress,
+            senderInboxId: message.senderInboxId,
             content: typeof message.content === "string" ? message.content : "",
-            sentAt: message.sentAt ?? new Date(),
+            sentAt: new Date(Number(message.sentAtNs / 1000000n)),
           });
         }
       })();
@@ -206,6 +192,6 @@ export function useXMTP() {
     error,
     conversations,
     isReady: status === "ready",
-    address: clientRef.current?.address,
+    inboxId: clientRef.current?.inboxId,
   };
 }

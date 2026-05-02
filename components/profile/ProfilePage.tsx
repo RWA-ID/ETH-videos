@@ -136,34 +136,26 @@ export function ProfilePage({ address, onProfileClick }: ProfilePageProps) {
 
   return (
     <div className="min-h-dvh bg-eth-dark pb-20">
-      {/* Banner */}
-      <div
-        className="h-44 relative overflow-hidden"
-        style={{
-          background: `linear-gradient(135deg, ${accentColor}22 0%, #0a0a0f 55%, ${accentColor}0d 100%)`,
-        }}
-      >
+      {/* Banner — blurred ambient mesh */}
+      <div className="h-48 relative overflow-hidden">
         <div
-          className="absolute inset-0"
           style={{
-            backgroundImage: `
-              radial-gradient(ellipse at 18% 55%, ${accentColor}38 0%, transparent 52%),
-              radial-gradient(ellipse at 78% 25%, rgba(191,90,242,0.18) 0%, transparent 48%),
-              radial-gradient(ellipse at 55% 80%, rgba(0,245,255,0.10) 0%, transparent 40%)
+            position: "absolute",
+            inset: -20,
+            background: `
+              radial-gradient(60% 60% at 30% 40%, ${accentColor}55, transparent 60%),
+              radial-gradient(60% 60% at 75% 60%, rgba(191,90,242,0.5), transparent 60%),
+              radial-gradient(50% 50% at 50% 100%, rgba(255,55,95,0.35), transparent 60%)
             `,
+            filter: "blur(40px)",
           }}
         />
         <div
-          className="absolute inset-0 opacity-[0.03]"
           style={{
-            backgroundImage:
-              "linear-gradient(transparent 50%, rgba(255,255,255,0.8) 50%)",
-            backgroundSize: "100% 3px",
+            position: "absolute",
+            inset: 0,
+            background: "linear-gradient(to bottom, transparent 30%, rgba(6,7,13,0.88) 100%)",
           }}
-        />
-        <div
-          className="absolute bottom-0 left-0 right-0 h-20"
-          style={{ background: "linear-gradient(to top, #0a0a0f, transparent)" }}
         />
         {isOwn && (
           <button
@@ -178,22 +170,27 @@ export function ProfilePage({ address, onProfileClick }: ProfilePageProps) {
       {/* Profile info */}
       <div className="px-5 -mt-12 relative z-10">
         <div className="flex items-end justify-between mb-5">
+          {/* Gradient ring avatar */}
           <div
             style={{
+              width: 96,
+              height: 96,
               borderRadius: "50%",
-              boxShadow: `0 0 0 3px ${accentColor}55, 0 0 24px ${accentColor}30, 0 0 48px ${accentColor}12`,
-              display: "inline-block",
+              padding: 3,
+              background: "linear-gradient(135deg, #00f5ff 0%, #bf5af2 50%, #ff375f 100%)",
+              boxShadow: "0 0 0 3px #06070d, 0 8px 32px rgba(0,245,255,0.30), 0 8px 32px rgba(191,90,242,0.25)",
               flexShrink: 0,
             }}
           >
-            <ENSAvatar
-              address={address}
-              ensName={ensName || undefined}
-              avatarUrl={ensAvatar || undefined}
-              size="xl"
-              showRing
-              className="border-4 border-eth-dark"
-            />
+            <div style={{ width: "100%", height: "100%", borderRadius: "50%", overflow: "hidden", background: "#06070d" }}>
+              <ENSAvatar
+                address={address}
+                ensName={ensName || undefined}
+                avatarUrl={ensAvatar || undefined}
+                size="xl"
+                className="!w-full !h-full"
+              />
+            </div>
           </div>
 
           <div className="flex gap-2 mb-2">
@@ -256,13 +253,13 @@ export function ProfilePage({ address, onProfileClick }: ProfilePageProps) {
         </div>
 
         {/* Stats row */}
-        <div className="flex gap-3 mb-5">
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8, marginBottom: 20 }}>
           <StatCard value={videos.length} label="Videos" />
           <a href={`https://efp.app/${address}`} target="_blank" rel="noopener noreferrer" className="hover:opacity-80 transition-opacity">
             <StatCard value={stats.following} label="Following" />
           </a>
           <a href={`https://efp.app/${address}`} target="_blank" rel="noopener noreferrer" className="hover:opacity-80 transition-opacity">
-            <StatCard value={stats.followers} label="Followers" />
+            <StatCard value={stats.followers} label="Followers" accent />
           </a>
         </div>
 
@@ -403,22 +400,43 @@ export function ProfilePage({ address, onProfileClick }: ProfilePageProps) {
   );
 }
 
-function StatCard({ value, label }: { value: number; label: string }) {
+function StatCard({ value, label, accent }: { value: number; label: string; accent?: boolean }) {
   return (
     <div
+      className="ev-glass-soft"
       style={{
-        background: "rgba(255,255,255,0.04)",
-        border: "1px solid rgba(255,255,255,0.08)",
         borderRadius: 14,
-        padding: "10px 18px",
+        padding: "10px 8px",
         textAlign: "center",
         minWidth: 72,
+        position: "relative",
+        overflow: "hidden",
       }}
     >
-      <p style={{ color: "white", fontWeight: 900, fontSize: 18, lineHeight: 1, letterSpacing: "-0.02em" }}>
+      {accent && (
+        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, rgba(0,245,255,0.10), rgba(191,90,242,0.10))" }} />
+      )}
+      <p
+        style={{
+          fontWeight: 900,
+          fontSize: 18,
+          lineHeight: 1,
+          letterSpacing: "-0.03em",
+          position: "relative",
+          ...(accent
+            ? {
+                background: "linear-gradient(135deg, #00f5ff 0%, #bf5af2 50%, #ff375f 100%)",
+                WebkitBackgroundClip: "text",
+                backgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                color: "transparent",
+              }
+            : { color: "white" }),
+        }}
+      >
         {formatCount(value)}
       </p>
-      <p style={{ color: "rgba(255,255,255,0.38)", fontSize: 11, marginTop: 4, fontWeight: 500 }}>
+      <p style={{ color: "rgba(255,255,255,0.38)", fontSize: 10, marginTop: 3, fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase" }}>
         {label}
       </p>
     </div>
